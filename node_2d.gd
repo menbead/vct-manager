@@ -1,25 +1,32 @@
 extends Node2D
 
-# useful python -> godot tutorial:
-# https://www.youtube.com/watch?v=z2MHuWEDUNw
-var DIR = OS.get_executable_path().get_base_dir()
-var interpreter_path = DIR.path_join("PythonFiles/venv/Scripts/python.exe")
-var script_path = DIR.path_join("PythonFiles/vlr.py")
-var player
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	if not OS.has_feature("standalone"): # if NOT exported version
-		interpreter_path = ProjectSettings.globalize_path("res://PythonFiles/venv/Scripts/python.exe")
-		script_path = ProjectSettings.globalize_path("res://PythonFiles/vlr.py")
-	
-	print(get_player(4))
 
-func get_player(playerId=0) -> String:
-	var output = []
-	var exit_code = OS.execute(interpreter_path, [script_path, str(playerId)], output, true)
-	return output[0]
-	
+func get_player(playerId := 0) -> void:
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(self._http_request_completed)
+
+	var error = http_request.request("http://127.0.0.1:5000/player/%d")
+	if error != OK:
+		push_error("An error occurred in the HTTP request.")
+
+func _http_request_completed(result, response_code, headers, body):
+	if result != HTTPRequest.RESULT_SUCCESS:
+		push_error("Image couldn't be downloaded. Try a different image.")
+
+	var image = Image.new()
+	var error = image.load_png_from_buffer(body)
+	if error != OK:
+		push_error("Couldn't load the image.")
+
+	var texture = ImageTexture.create_from_image(image)
+
+	# Display the image in a TextureRect node.
+	var texture_rect = TextureRect.new()
+	add_child(texture_rect)
+	texture_rect.texture = texture
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass

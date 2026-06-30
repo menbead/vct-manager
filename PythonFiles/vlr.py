@@ -6,12 +6,16 @@
 import sys
 import json
 import vlrdevapi as vlr
+from flask import Flask
+from markupsafe import escape
 
+app = Flask(__name__)
+
+@app.route('/main')
 def main():
     args = sys.argv
     playerId = args[1]
     profile = vlr.players.profile(4)
-
 
     data = {
         "name": profile.handle,
@@ -19,8 +23,15 @@ def main():
         "country": profile.country
     }
 
-    print(profile.handle)
+    return f"TEST CASE: {profile.handle}"
 
+@app.route('/player/<playerId>')
+def get_player(playerId):
+    p = vlr.players.profile(playerId)
+    if p:
+        return p.handle
+    else:
+        return f"ERROR: PLAYER {playerId} NOT FOUND"
 
 if __name__ == "__main__":
     main()
