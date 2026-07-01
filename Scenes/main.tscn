@@ -1,10 +1,3 @@
 [gd_scene format=3 uid="uid://ccqc53bjdjp5w"]
 
-[ext_resource type="Script" uid="uid://c7yc3e3w757dw" path="res://node_2d.gd" id="1_jjgbg"]
-[ext_resource type="Script" uid="uid://b5cs08pssiqrl" path="res://Scenes/vlr_flask_communication.gd" id="2_bo1nx"]
-
 [node name="Main" type="Node2D" unique_id=1513181677]
-script = ExtResource("1_jjgbg")
-
-[node name="VLR_flask_communication" type="HTTPRequest" parent="." unique_id=236483017]
-script = ExtResource("2_bo1nx")
