@@ -11,10 +11,15 @@ TODO:
 import json
 import vlrdevapi as vlr
 import time
+import datetime
+
+DATE_OF_FRANCHISING = datetime.date(2023,1,1)
 
 test_file_name = "test"
 
 def main():
+    london = vlr.events.list_events(limit=1)
+    print(london)
     print(f"Fetching events...")
     events = get_tier_one_events()
     print(f"{len(events)} events found.")
@@ -50,9 +55,17 @@ def get_tier_one_events():
     while len(events) < 263:
         events += vlr.events.list_events(tier="vct", page=page, status="completed")
         page += 1
-                      
+    
+    
+
     vct_events = list(filter(event_filter_vct, events))
     return vct_events
+
+def event_filter_franchising(e):
+    return e.start_date < DATE_OF_FRANCHISING
+
+def event_filter_pre_franchising(e):
+    return e.start_date > DATE_OF_FRANCHISING
 
 # attempts to filter to just VCT events
 def event_filter_vct(e):
