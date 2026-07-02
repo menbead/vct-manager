@@ -9,35 +9,17 @@ TODO:
 """
 
 import json
-import vlrdevapi as vlr
-import time
-import datetime
+import vlrdevapi as vlr # type: ignore (stops warning :)
 
-DATE_OF_FRANCHISING = datetime.date(2023,1,1)
-
-test_file_name = "test"
+TEST_FILE_NAME = "test"
 
 def main():
-    london = vlr.events.list_events(limit=1)
-    print(london)
     print(f"Fetching events...")
     events = get_tier_one_events()
     print(f"{len(events)} events found.")
-
-    trimmed_events = [
-        {
-            "id": e.id,
-            "name": e.name,
-            "start_date": e.start_date.isoformat() if e.start_date else None,
-            "end_date": e.end_date.isoformat() if e.end_date else None,
-        }
-        for e in events
-    ]
-
     print(f"Writing to file...")
-    write_json_to_file(test_file_name, trimmed_events)
-    print(f"Saved to {test_file_name}.json")
-
+    write_json_to_file(TEST_FILE_NAME, events)
+    print(f"Saved to {TEST_FILE_NAME}.json")
 
 def write_json_to_file(file, data):
     # from https://www.geeksforgeeks.org/python/saving-text-json-and-csv-to-a-file-in-python/
@@ -50,26 +32,25 @@ def write_json_to_file(file, data):
 
 def get_tier_one_events():
     events = []
-    page = 1
-    # number of completed events maxes out at 268 as of 01/07/2026
-    while len(events) < 263:
-        events += vlr.events.list_events(tier="vct", page=page, status="completed")
-        page += 1
+
+    with open('eventids.txt', 'r') as file:
+        for line in file:
+            print(int(line.strip()))
+            print(vlr.events.info(event_id = 353)).name
+            print(vlr.events.info(event_id = int(line.strip())).name)
+            events = events + vlr.events.info(event_id = int(line.strip()))
     
-    
+    trimmed_events = [
+        {
+            "id": e.id,
+            "name": e.name,
+            "start_date": e.start_date.isoformat() if e.start_date else None,
+            "end_date": e.end_date.isoformat() if e.end_date else None,
+        }
+        for e in events
+    ]
 
-    vct_events = list(filter(event_filter_vct, events))
-    return vct_events
-
-def event_filter_franchising(e):
-    return e.start_date < DATE_OF_FRANCHISING
-
-def event_filter_pre_franchising(e):
-    return e.start_date > DATE_OF_FRANCHISING
-
-# attempts to filter to just VCT events
-def event_filter_vct(e):
-    return "Stage 1" in e.name or "Stage 2" in e.name or "Kickoff" in e.name or "Valorant Masters" in e.name or "Valorant Champions" in e.name
+    return trimmed_events
     
 # checks if the vlr api is working before we actually start scraping :)
 if __name__ == "__main__" and vlr.check_status():
